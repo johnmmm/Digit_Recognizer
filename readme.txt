@@ -1,0 +1,2 @@
+程序运行说明：
+神经网络训练程序共有三个，分别为training1.py,training2.py,training3.py,调整里面的文件名和绝对路径可运行得到3个csv文件。运行train_csv.py文件可以将三个结果进行投票优化，最终得出的output_final.csv即为最终结果。

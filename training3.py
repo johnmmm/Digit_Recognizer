@@ -37,6 +37,14 @@ labels_count = np.unique(labels_flat).shape[0]
 labels = dense_to_one_hot(labels_flat, labels_count)
 labels = labels.astype(np.uint8)
 
+# shuffle the data
+nums=labels_flat.shape[0]
+perm = np.arange(nums)
+np.random.shuffle(perm)
+for i in range(0,42000):
+    images.values[i] = images.values[perm[i]]
+    labels[i] = labels[perm[i]]
+
 train_images, test_images, train_labels, test_labels = train_test_split(images, labels, train_size=0.9, random_state=0)
 
 x = tf.placeholder(tf.float32, shape=[None, 784])
@@ -62,6 +70,7 @@ def max_pool_2x2(x):
 epochs_completed = 0
 index_in_epoch = 0
 num_examples = train_images.shape[0]
+print num_examples
 def next_batch(batch_size):
     
     global train_images
@@ -71,9 +80,15 @@ def next_batch(batch_size):
     
     start = index_in_epoch
     index_in_epoch += batch_size
-    
-    # when all trainig data have been already used, it is reorder randomly    
+       
     if index_in_epoch > num_examples:
+        # shuffle the data
+        nums=labels_flat.shape[0]
+        perm = np.arange(num_examples)
+        np.random.shuffle(perm)
+        for i in range(0,num_examples):
+            train_images.values[i] = train_images.values[perm[i]]
+            train_labels[i] = train_labels[perm[i]]
         start = 0
         index_in_epoch = batch_size
     end = index_in_epoch
@@ -87,13 +102,13 @@ x_image = tf.reshape(x, [-1,28,28,1])
 h_conv1 = tf.nn.relu(conv2d(x_image, W_conv1) + b_conv1)
 h_pool1 = max_pool_2x2(h_conv1)
 
-W_conv2 = weight_variable([5, 5, 32, 128])
-b_conv2 = bias_variable([128])
+W_conv2 = weight_variable([5, 5, 32, 64])
+b_conv2 = bias_variable([64])
 
 h_conv2 = tf.nn.relu(conv2d(h_pool1, W_conv2) + b_conv2)
 h_pool2 = max_pool_2x2(h_conv2)
 
-W_conv3 = weight_variable([5, 5, 128, 256])
+W_conv3 = weight_variable([5, 5, 64, 256])
 b_conv3 = bias_variable([256])
 
 h_conv3 = tf.nn.relu(conv2d(h_pool2, W_conv3) + b_conv3)
@@ -122,9 +137,9 @@ accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 predict = tf.argmax(y,1)
 sess.run(tf.global_variables_initializer())
 
-for i in range(0,1500):
+for i in range(0,40000):
     batch_x, batch_y = next_batch(BATCH_SIZE)
-    if i%100 == 0:
+    if i%1000 == 0:
         train_accuracy = accuracy.eval(feed_dict={x: test_images.values, y_: test_labels,
                                                   keep_prob: 1.0})
         print("step %d, training accuracy %g"%(i, train_accuracy))
@@ -149,7 +164,7 @@ predicted_lables = np.zeros(predict_images.shape[0])
 for i in range(0,predict_images.shape[0]//BATCH_SIZE):
     predicted_lables[i*BATCH_SIZE : (i+1)*BATCH_SIZE] = predict.eval(feed_dict={x: predict_images[i*BATCH_SIZE : (i+1)*BATCH_SIZE], 
                                                                                 keep_prob: 1.0})
-np.savetxt('/Users/mac/Desktop/programme/Python/dlworking/testing_answer.csv', 
+np.savetxt('/Users/mac/Desktop/programme/Python/dlworking/testing_answer2.csv', 
            np.c_[range(1,len(predict_images)+1),predicted_lables], 
            delimiter=',', 
            header = 'ImageId,Label', 
